@@ -10,11 +10,8 @@
     "content_scripts": [
       {
         "matches": ["https://leerling.somtoday.nl/*"],
-        "js": ["content.js"]
-      },
-      {
-        "matches": ["https://leerling.somtoday.nl/cijfers/vakresultaten"],
-        "js": ["content.js"]
+        "js": ["content.js"],
+        "run_at": "document_end"
       }
     ],
     "host_permissions": [
