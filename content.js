@@ -1,128 +1,153 @@
 console.log("Extension activated on SomToday page!");
 
-function findGradeTable() {
-    return document.querySelector('table[aria-label*="cijfer"]') || 
-           document.querySelector('table.grade-table') ||
-           document.querySelector('table');
-}
+function calculateNeededGrade(grades, weights, desiredAverage, newWeight) {
+    let weightedSum = 0;
+    let totalWeight = 0;
 
-function replaceGrades(newValue) {
-    const table = findGradeTable();
-    if (!table) return;
-
-    const cells = table.getElementsByTagName('td');
-    let replacementCount = 0;
-    
-    for (let cell of cells) {
-        if (cell.textContent.match(/\b([1-9]|10)([,.]\d)?\b/)) {
-            cell.textContent = newValue;
-            replacementCount++;
-        }
+    for (let i = 0; i < grades.length; i++) {
+        weightedSum += grades[i] * weights[i];
+        totalWeight += weights[i];
     }
-    
-    console.log(`Replaced ${replacementCount} grades with ${newValue}`);
+
+    const neededGrade = (desiredAverage * (totalWeight + newWeight) - weightedSum) / newWeight;
+    return neededGrade.toFixed(2);
 }
 
-function createGradeInput() {
-    if (document.querySelector('.grade-modifier')) return;
-
+function createCalculatorInput(grades, weights) {
     const inputContainer = document.createElement('div');
-    inputContainer.className = 'grade-modifier';
+    inputContainer.className = 'grade-calculator';
     inputContainer.innerHTML = `
+        <style>
+            .grade-calculator {
+                margin: 16px 0;
+                padding: 16px;
+                border-top: 1px solid #eee;
+            }
+            .grade-calculator .st-card-content {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .grade-calculator .st-label {
+                font-weight: bold;
+            }
+            .grade-calculator .st-input {
+                padding: 8px;
+                border-radius: 4px;
+                width: 80px;
+            }
+            .grade-calculator .st-button {
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+            /* Dark mode styles */
+            @media (prefers-color-scheme: dark) {
+                .grade-calculator {
+                    background: #333;
+                    color: #eee;
+                    border-top: 1px solid #555;
+                }
+                .grade-calculator .st-input {
+                    background-color: #444;
+                    color: #eee;
+                    border: 1px solid #777;
+                }
+                .grade-calculator .st-button {
+                    background: linear-gradient(to bottom, #444, #444);
+                    color: #444;
+                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+                }
+                .grade-calculator .st-button:hover {
+                    background: linear-gradient(to bottom, #0088cc, #006699);
+                }
+            }
+        </style>
         <div class="st-card-content">
-            <input type="text" class="st-input" id="gradeValue" placeholder="Voer een cijfer in">
-            <button class="st-button" id="applyGrade">Toepassen</button>
+            <label class="st-label">Gewenste gemiddelde:</label>
+            <input type="number" class="st-input" id="desiredAverage" placeholder="8.0" min="1" max="10" step="0.1">
+            <label class="st-label">Weging nieuwe cijfer:</label>
+            <input type="number" class="st-input" id="newWeight" placeholder="10" min="1" max="100" step="1">
+            <button class="st-button" id="calculateGrade">Bereken benodigd cijfer</button>
+            <div id="neededGradeResult" style="margin-top: 10px;"></div>
         </div>
     `;
 
-    // Find the heading that contains "Cijferoverzicht"
-    const heading = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'))
-        .find(h => h.textContent.includes('Cijferoverzicht'));
+    const gradesContainer = document.querySelector('sl-voortgangsresultaten');
+    if (gradesContainer) {
+        gradesContainer.appendChild(inputContainer);
 
-    if (heading) {
-        // Create a wrapper to hold both the heading and our input
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.alignItems = 'center';
-        wrapper.style.gap = '16px';
-        
-        // Move the heading into our wrapper and add our input
-        heading.parentNode.insertBefore(wrapper, heading);
-        wrapper.appendChild(heading);
-        wrapper.appendChild(inputContainer);
-    }
-}
+        document.getElementById('calculateGrade').addEventListener('click', () => {
+            const desiredAverage = parseFloat(document.getElementById('desiredAverage').value);
+            const newWeight = parseFloat(document.getElementById('newWeight').value);
 
-// Update the styles
-const styles = document.createElement('style');
-styles.textContent = `
-    .grade-modifier {
-        display: inline-flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .grade-modifier .st-card-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .grade-modifier .st-input {
-        padding: 8px;
-        border: 2px solid #ff0000;
-        border-radius: 4px;
-        width: 100px;
-        background-color: #fff0f0;
-        color: #ff0000;
-    }
-    .grade-modifier .st-input::placeholder {
-        color: #ff9999;
-    }
-    .grade-modifier .st-button {
-        background: #ff0000;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 8px 16px;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-    .grade-modifier .st-button:hover {
-        background: #cc0000;
-    }
-`;
+            if (isNaN(desiredAverage) || isNaN(newWeight)) {
+                document.getElementById('neededGradeResult').textContent = "Vul geldige nummers in.";
+                return;
+            }
 
-// ...rest of the existing code...
-
-// Initialize observer for dynamic content
-const observer = new MutationObserver((mutations) => {
-    const table = findGradeTable();
-    if (table) {
-        const cells = table.getElementsByTagName('td');
-        if (cells.length > 0) {
-            // Table has content, stop observing
-            observer.disconnect();
-            createGradeInput();
-        }
-    }
-});
-
-// Start observing when page loads
-function init() {
-    document.head.appendChild(styles);
-    const table = findGradeTable();
-    if (table) {
-        createGradeInput();
-    } else {
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
+            const neededGrade = calculateNeededGrade(grades, weights, desiredAverage, newWeight);
+            document.getElementById('neededGradeResult').textContent = `Benodigd cijfer: ${neededGrade}`;
         });
     }
 }
 
-// Execute initialization
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
+function extractGradesAndWeights() {
+    const grades = [];
+    const weights = [];
+
+    // Target each grade item
+    const gradeItems = document?.querySelectorAll('sl-vakresultaat-item');
+
+    gradeItems.forEach(item => {
+        // Extract grade
+        const gradeElement = item.querySelector('.cijfer > span');
+        const gradeText = gradeElement ? gradeElement.textContent.trim() : null;
+
+        // Extract weight
+        const weightElement = item.querySelector('.weging');
+        const weightText = weightElement ? weightElement.textContent.replace('x', '').trim() : null;
+
+        if (gradeText && weightText && gradeText !== '*') {
+            const grade = parseFloat(gradeText.replace(',', '.'));
+            const weight = parseInt(weightText);
+
+            if (!isNaN(grade) && !isNaN(weight)) {
+                grades.push(grade);
+                weights.push(weight);
+            }
+        }
+    });
+
+    return { grades, weights };
 }
+
+function createGradeInput() {
+    const { grades, weights } = extractGradesAndWeights();
+    createCalculatorInput(grades, weights);
+}
+
+
+
+function findGradeTable() {
+    return document.querySelector('sl-voortgangsresultaten');
+}
+
+function initialize() {
+    if (document.querySelector("sl-voortgangsresultaten")) {
+        createGradeInput();
+    }
+}
+
+const observer = new MutationObserver(function (mutations) {
+    if (document.querySelector("sl-examenresultaten")) {
+        initialize();
+      observer.disconnect(); // Stop observing after the table is found
+    }
+  });
+  
+  // Start observing the document body for changes
+  observer.observe(document.body, { childList: true, subtree: true });
