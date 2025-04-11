@@ -10,7 +10,12 @@
     "content_scripts": [
       {
         "matches": ["https://leerling.somtoday.nl/*"],
-        "js": ["content.js"],
+        "js": ["VT.js"],
+        "run_at": "document_end"
+      },
+      {
+        "matches": ["https://leerling.somtoday.nl/*"],
+        "js": ["SE.js"],
         "run_at": "document_end"
       }
     ],
