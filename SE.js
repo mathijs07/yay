@@ -231,7 +231,10 @@ async function initialize_SE() {
 
     const urlPattern = "https://leerling.somtoday.nl/cijfers/vakresultaten?vak";
     const urlPatternend = "Examen";
-     if (document.URL.startsWith(urlPattern) && document.URL.endsWith(urlPatternend)) {
+    const urlPatternend_wiskD = "20D";
+    const urlPatternend_gmf = "(maatschappijleer)";
+    const urlPatternend_O_O = "20ontwerpen";
+     if (document.URL.startsWith(urlPattern) && document.URL.endsWith(urlPatternend) || document.URL.endsWith(urlPatternend_wiskD) || document.URL.endsWith(urlPatternend_gmf) || document.URL.endsWith(urlPatternend_O_O)) {
         await waitForElement('sl-examenresultaten', 5000)
         const gradeTable = document.querySelector("sl-examenresultaten");
         console.log("Grade table found:", gradeTable);
