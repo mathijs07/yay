@@ -1,4 +1,4 @@
-console.log("Extension activated on SomToday page!");
+//console.log("Extension activated on SomToday page!");
 
 function calculateNeededGrade(grades, weights, desiredAverage, newWeight) {
     let weightedSum = 0;

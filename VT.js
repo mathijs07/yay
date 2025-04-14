@@ -1,4 +1,4 @@
-console.log("Extension activated on SomToday page!");
+//console.log("Extension activated on SomToday page!");
 
 function calculateNeededGrade(grades, weights, desiredAverage, newWeight) {
     let weightedSum = 0;
@@ -34,10 +34,6 @@ function createCalculatorInput_VT() {
 
     const inputContainer = document.createElement('div');
     inputContainer.className = 'grade-calculator';
-
-    const { grades: initialGrades, weights: initialWeights } = extractGradesAndWeights();
-    const gradesArray = [...initialGrades];
-    const weightsArray = [...initialWeights];
 
     inputContainer.innerHTML = `
         <style>
@@ -143,9 +139,14 @@ function createCalculatorInput_VT() {
         gradesContainer.appendChild(inputContainer);
 
         function attachListeners() {
+            // Extract grades and weights inside the event listener
+            const { grades: initialGrades, weights: initialWeights } = extractGradesAndWeights();
+            const gradesArray = [...initialGrades];
+            const weightsArray = [...initialWeights];
+
             document.getElementById('calculateGrade').addEventListener('click', () => {
-                const desiredAverage = parseFloat(document.getElementById('desiredAverage').value);
-                const newWeight = parseFloat(document.getElementById('newWeight').value);
+                const desiredAverage = parseFloat(document.getElementById('desiredAverage').value.replace(',', '.'));
+                const newWeight = parseFloat(document.getElementById('newWeight').value.replace(',', '.'));
 
                 if (isNaN(desiredAverage) || isNaN(newWeight)) {
                     document.getElementById('neededGradeResult').textContent = "Vul geldige nummers in.";
@@ -157,8 +158,8 @@ function createCalculatorInput_VT() {
             });
 
             document.getElementById('addGrade').addEventListener('click', () => {
-                const newGrade = parseFloat(document.getElementById('newGrade').value);
-                const gradeWeight = parseFloat(document.getElementById('gradeWeight').value);
+                const newGrade = parseFloat(document.getElementById('newGrade').value.replace(',', '.'));
+                const gradeWeight = parseFloat(document.getElementById('gradeWeight').value.replace(',', '.'));
 
                 if (isNaN(newGrade) || isNaN(gradeWeight)) {
                     document.getElementById('averageGradeResult').textContent = "Vul geldige nummers in.";
@@ -462,3 +463,24 @@ const observer_reload = new MutationObserver(function (mutations) {
 
 // Start observing the document body for changes
 observer_reload.observe(document.body, { childList: true, subtree: true });
+
+document.getElementById('desiredAverage').addEventListener('input', function() {
+    let value = this.value;
+    // Remove non-numeric characters except comma and period
+    value = value.replace(/[^0-9,.]/g, '');
+
+    // Replace multiple commas/periods with only one
+    value = value.replace(/[,.]+/g, m => m[0]);
+
+    // If the value is greater than 100, divide by 10 (assuming it was entered as a whole number)
+    if (parseFloat(value.replace(',', '.')) > 10 && value.length > 2) {
+        value = (parseFloat(value.replace(',', '.')) / 10).toFixed(1);
+    }
+
+    // Ensure the value does not exceed 10
+    if (parseFloat(value.replace(',', '.')) > 10) {
+        value = '10';
+    }
+
+    this.value = value;
+});
